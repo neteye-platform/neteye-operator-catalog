@@ -28,6 +28,9 @@ entries:
   - name: neteye-operator.0.1.0-alpha9
     skips:
       - neteye-operator.0.1.0-alpha8
+  - name: neteye-operator.0.1.0-alpha10
+    skips:
+      - neteye-operator.0.1.0-alpha9
 ---
 schema: olm.bundle
 name: neteye-operator.0.1.0-alpha2
@@ -118,3 +121,18 @@ properties:
     value:
       packageName: neteye-operator
       version: 0.1.0-alpha9
+---
+schema: olm.bundle
+name: neteye-operator.0.1.0-alpha10
+package: neteye-operator
+image: ghcr.io/neteye-platform/neteye-operator-bundle@sha256:e3fda54682f67772a9ed273a17f00be49b659df6c0c9382469fb9903c083f697
+properties:
+  - type: olm.gvk
+    value:
+      group: operators.coreos.com
+      kind: ClusterServiceVersion
+      version: v1alpha1
+  - type: olm.package
+    value:
+      packageName: neteye-operator
+      version: 0.1.0-alpha10
