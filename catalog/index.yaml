@@ -159,6 +159,8 @@ package: neteye-operator
 name: nightly-4.50
 entries:
   - name: neteye-operator.nightly-27ca4414426a
+  - name: neteye-operator.0.1.1-alpha.3-nightly-f0f99c500da6
+    replaces: neteye-operator.nightly-27ca4414426a
 ---
 schema: olm.bundle
 name: neteye-operator.nightly-27ca4414426a
@@ -174,3 +176,18 @@ properties:
     value:
       packageName: neteye-operator
       version: 0.1.1-alpha.3-nightly-27ca4414426a
+---
+schema: olm.bundle
+name: neteye-operator.0.1.1-alpha.3-nightly-f0f99c500da6
+package: neteye-operator
+image: ghcr.io/neteye-platform/neteye-operator-bundle:0.1.1-alpha.3-nightly-f0f99c500da6
+properties:
+  - type: olm.gvk
+    value:
+      group: operators.coreos.com
+      kind: ClusterServiceVersion
+      version: v1alpha1
+  - type: olm.package
+    value:
+      packageName: neteye-operator
+      version: 0.1.1-alpha.3-nightly-f0f99c500da6
