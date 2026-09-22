@@ -191,3 +191,30 @@ properties:
     value:
       packageName: neteye-operator
       version: 0.1.1-alpha.3-nightly-f0f99c500da6
+---
+schema: olm.channel
+package: neteye-operator
+name: 4.50-nightly
+entries:
+  - name: neteye-operator.0.1.1-alpha.3-nightly-59da43c3f378
+---
+schema: olm.channel
+package: neteye-operator
+name: 4.50-stable
+entries:
+  - name: neteye-operator.0.1.1-alpha.3-nightly-59da43c3f378
+---
+schema: olm.bundle
+name: neteye-operator.0.1.1-alpha.3-nightly-59da43c3f378
+package: neteye-operator
+image: ghcr.io/neteye-platform/neteye-operator-bundle:0.1.1-alpha.3-nightly-59da43c3f378
+properties:
+  - type: olm.gvk
+    value:
+      group: operators.coreos.com
+      kind: ClusterServiceVersion
+      version: v1alpha1
+  - type: olm.package
+    value:
+      packageName: neteye-operator
+      version: 0.1.1-alpha.3-nightly-59da43c3f378
