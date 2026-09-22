@@ -13,9 +13,108 @@ permissions:
   packages: write
 
 jobs:
+  test-catalog:
+    name: Test catalog image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CATALOG_IMAGE: neteye-operator-catalog:test
+      CATALOG_PACKAGE: neteye-operator
+      # renovate: datasource=docker depName=fullstorydev/grpcurl
+      GRPCURL_IMAGE: "fullstorydev/grpcurl:v1.9.3@sha256:085e183ca334eb4e81ca81ee12cbb2b2737505d1d77f5e33dabc5d066593d998"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Build catalog image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: Dockerfile
+          load: true
+          tags: ${{ env.CATALOG_IMAGE }}
+          provenance: false
+
+      - name: Validate the file-based catalog bundled in the image
+        run: docker run --rm "${CATALOG_IMAGE}" validate /configs
+
+      - name: Start the catalog container
+        run: docker run -d --name catalog "${CATALOG_IMAGE}"
+
+      - name: Wait until the catalog serves and reports healthy
+        run: |
+          set -euo pipefail
+          for _ in $(seq 1 30); do
+            if docker exec catalog /usr/bin/grpc_health_probe -addr=:50051 >/dev/null 2>&1; then
+              echo "catalog gRPC server is healthy (SERVING)"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::catalog did not report healthy within 30s"
+          docker logs catalog
+          exit 1
+
+      - name: Verify the catalog serves the operator package
+        run: |
+          set -euo pipefail
+          packages="$(docker run --rm --network container:catalog "${GRPCURL_IMAGE}" -plaintext localhost:50051 api.Registry/ListPackages)"
+          echo "served packages:"
+          printf '%s' "${packages}" | jq -r '.name'
+          if ! printf '%s' "${packages}" | jq -se --arg pkg "${CATALOG_PACKAGE}" 'any(.[]; .name == $pkg)' >/dev/null; then
+            echo "::error::package '${CATALOG_PACKAGE}' is not served by the catalog"
+            docker logs catalog
+            exit 1
+          fi
+
+      - name: Verify the operator package channel graph
+        run: |
+          set -euo pipefail
+          request="$(jq -nc --arg name "${CATALOG_PACKAGE}" '{name: $name}')"
+          package="$(docker run --rm --network container:catalog "${GRPCURL_IMAGE}" -plaintext -d "${request}" localhost:50051 api.Registry/GetPackage)"
+          echo "${package}" | jq .
+          if ! echo "${package}" | jq -e --arg pkg "${CATALOG_PACKAGE}" '
+            .defaultChannelName as $default
+            | (.name == $pkg)
+              and ((.channels | length) > 0)
+              and (($default | length) > 0)
+              and (([.channels[].name] | index($default)) != null)
+          ' >/dev/null; then
+            echo "::error::package '${CATALOG_PACKAGE}' has an inconsistent channel graph"
+            docker logs catalog
+            exit 1
+          fi
+
+      - name: Verify the catalog serves resolvable bundles
+        run: |
+          set -euo pipefail
+          bundles="$(docker run --rm --network container:catalog "${GRPCURL_IMAGE}" -plaintext localhost:50051 api.Registry/ListBundles)"
+          echo "served bundles:"
+          printf '%s' "${bundles}" | jq -r '"\(.csvName) -> \(.bundlePath)"'
+          if ! printf '%s' "${bundles}" | jq -se --arg pkg "${CATALOG_PACKAGE}" '
+            (length > 0)
+            and all(.[]; .packageName == $pkg)
+            and all(.[]; (.bundlePath | length) > 0)
+          ' >/dev/null; then
+            echo "::error::catalog does not serve valid bundles for '${CATALOG_PACKAGE}'"
+            docker logs catalog
+            exit 1
+          fi
+
+      - name: Show catalog logs and clean up
+        if: always()
+        run: |
+          docker logs catalog || true
+          docker rm -f catalog || true
+
   build-catalog:
     name: Build catalog image
     runs-on: ubuntu-latest
+    needs: test-catalog
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
