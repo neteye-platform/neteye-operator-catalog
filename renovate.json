@@ -1,4 +1,15 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>neteye-platform/repo-commons"]
+  "extends": ["github>neteye-platform/repo-commons"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update tool images pinned via '# renovate:' annotations in workflow env vars (e.g. grpcurl used to test the catalog image)",
+      "managerFilePatterns": ["/^\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+?) depName=(?<depName>\\S+?)\\s+[A-Z0-9_]+:\\s*[\"']?\\S+?:(?<currentValue>[^\\s\"'@]+)@(?<currentDigest>sha256:[a-f0-9]+)[\"']?"
+      ],
+      "versioningTemplate": "docker"
+    }
+  ]
 }
