@@ -203,6 +203,11 @@ entries:
     replaces: neteye-operator.0.1.1-alpha.3-nightly-bae6d9850a90
     skips:
       - neteye-operator.0.1.1-alpha.3-nightly-253c2275127d
+  - name: neteye-operator.0.1.1-alpha.3-nightly-6cda3560f4f1
+    replaces: neteye-operator.0.1.1-alpha.3-nightly-d762c22910bc
+    skips:
+      - neteye-operator.0.1.1-alpha.3-nightly-253c2275127d
+      - neteye-operator.0.1.1-alpha.3-nightly-bae6d9850a90
 ---
 schema: olm.bundle
 name: neteye-operator.0.1.1-alpha.3-nightly-253c2275127d
@@ -248,3 +253,18 @@ properties:
     value:
       packageName: neteye-operator
       version: 0.1.1-alpha.3-nightly-d762c22910bc
+---
+schema: olm.bundle
+name: neteye-operator.0.1.1-alpha.3-nightly-6cda3560f4f1
+package: neteye-operator
+image: ghcr.io/neteye-platform/neteye-operator-bundle:0.1.1-alpha.3-nightly-6cda3560f4f1
+properties:
+  - type: olm.gvk
+    value:
+      group: operators.coreos.com
+      kind: ClusterServiceVersion
+      version: v1alpha1
+  - type: olm.package
+    value:
+      packageName: neteye-operator
+      version: 0.1.1-alpha.3-nightly-6cda3560f4f1
